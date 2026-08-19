@@ -16,15 +16,28 @@ jobs:
       - name: Generate contribution snake
         uses: Platane/snk@v3
         with:
-          github_user_name: ${{ github.repository_owner }}
+          github_user_name: GabrielTeodoro7
           outputs: |
             dist/github-contribution-grid-snake.svg
             dist/github-contribution-grid-snake-dark.svg?palette=github-dark
 
-      - name: Push generated files
-        uses: crazy-max/ghaction-github-pages@v4
-        with:
-          build_dir: dist
-          jekyll: false
-        env:
-          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Snake
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git clone --depth 1 --branch output https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git output-repo || git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git output-repo
+
+          cd output-repo
+
+          git checkout --orphan output 2>/dev/null || true
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+
+          cp -r ../dist/* .
+
+          git add .
+
+          git commit -m "Update contribution snake" || echo "No changes to commit"
+
+          git push origin output --force
